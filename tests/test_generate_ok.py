@@ -1,3 +1,4 @@
+import pytest
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -43,3 +44,4 @@ def test_generate_ok(monkeypatch):
     for f in data["files"]:
         assert f["content"]
     assert data["zip_base64"]
+
