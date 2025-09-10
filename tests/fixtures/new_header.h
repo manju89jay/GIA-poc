@@ -7,4 +7,4 @@ typedef struct {
     SampleInner inner;
     int flag;
     bool active;
-} HPSD_HealthVectorPort;
+} ExamplePort;

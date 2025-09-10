@@ -6,4 +6,4 @@ typedef struct {
 typedef struct {
     SampleInner inner;
     int flag;
-} HPSD_HealthVectorPort;
+} ExamplePort;

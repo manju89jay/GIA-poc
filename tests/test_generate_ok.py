@@ -8,9 +8,9 @@ from llm_backends import CloudLLM
 
 def mock_generate(self, system: str, user: str) -> str:
     return (
-        "// FILE: HPSD_HealthVectorPort_versioned.h\n```c\nv1\n```\n"
-        "// FILE: Converter_HPSD_HealthVectorPort.h\n```c\nv2\n```\n"
-        "// FILE: Converter_HPSD_HealthVectorPort.cpp\n```cpp\nv3\n```\n"
+        "// FILE: ExamplePort_versioned.h\n```c\nv1\n```\n"
+        "// FILE: Converter_ExamplePort.h\n```c\nv2\n```\n"
+        "// FILE: Converter_ExamplePort.cpp\n```cpp\nv3\n```\n"
         "// FILE: converters.cpp\n```cpp\nv4\n```"
     )
 
@@ -23,7 +23,7 @@ def test_generate_ok(monkeypatch):
     old_header = (fixtures / "old_header.h").read_text()
     new_header = (fixtures / "new_header.h").read_text()
     payload = {
-        "root": "HPSD_HealthVectorPort",
+        "root": "ExamplePort",
         "old_header": old_header,
         "new_header": new_header,
         "backend": "openai",
@@ -32,12 +32,12 @@ def test_generate_ok(monkeypatch):
     resp = client.post("/generate", json=payload)
     assert resp.status_code == 200
     data = resp.json()
-    assert data["root"] == "HPSD_HealthVectorPort"
+    assert data["root"] == "ExamplePort"
     names = {f["name"] for f in data["files"]}
     assert names == {
-        "HPSD_HealthVectorPort_versioned.h",
-        "Converter_HPSD_HealthVectorPort.h",
-        "Converter_HPSD_HealthVectorPort.cpp",
+        "ExamplePort_versioned.h",
+        "Converter_ExamplePort.h",
+        "Converter_ExamplePort.cpp",
         "converters.cpp",
     }
     for f in data["files"]:

@@ -21,7 +21,7 @@ docker run -p 8000:8000 gia-adapter
 POST `/generate`
 ```json
 {
-  "root": "HPSD_HealthVectorPort",
+  "root": "ExamplePort",
   "old_header": "<OLD HEADER>",
   "new_header": "<NEW HEADER>",
   "backend": "openai",
