@@ -15,7 +15,7 @@ def parse_llm_files(text: str) -> List[FileOut]:
         raise HTTPException(status_code=409, detail=text.strip())
     text = text.strip()
     matches = list(FILE_RE.finditer(text))
-    if len(matches) != 4 or "".join(m.group(0) for m in matches).strip() != text:
+    if len(matches) != 4 or FILE_RE.sub("", text).strip():
         raise HTTPException(status_code=422, detail="expected four file blocks")
     files = []
     has_versioned = has_conv_h = has_conv_cpp = has_converters = False
