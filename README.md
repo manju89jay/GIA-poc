@@ -4,12 +4,37 @@
 Generates versioned adapters for C structs by calling an LLM. Given two preprocessed headers and a root struct name, it returns four files implementing conversion logic between versions.
 
 ## How to run
-### Local
-```bash
-pip install -r requirements.txt
-uvicorn app:app --reload
-```
-Service listens on `http://localhost:8000`.
+
+### Local workflow
+1. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Provide LLM credentials**
+   The default backend talks to OpenAI. Export the API key in the shell that
+   starts Uvicorn so the process can discover it:
+   ```bash
+   # macOS/Linux
+   export OPENAI_API_KEY="sk-your-secret"
+
+   # Windows PowerShell (open a new terminal afterwards)
+   setx OPENAI_API_KEY "sk-your-secret"
+   ```
+   The repository never stores the key; rotate it immediately if you suspect
+   exposure.
+3. **Start the FastAPI server**
+   ```bash
+   uvicorn app:app --reload
+   ```
+   The API listens on `http://localhost:8000`.
+4. **Call the generator**
+   With the server running you can execute the cross-platform helper script.
+   The defaults use the bundled fixtures so the first run works out of the box:
+   ```bash
+   python scripts/run_generator.py
+   ```
+   Use `python scripts/run_generator.py --help` to inspect additional
+   parameters (custom headers, backend overrides, dumping JSON, etc.).
 
 ### Docker
 ```bash
@@ -32,7 +57,27 @@ POST `/generate`
 ```
 Response contains the generated files and optional base64 ZIP.
 
-Example:
+### Local invocation helper
+The repository ships with `scripts/run_generator.py`, a small CLI that
+assembles the payload and posts it to the running FastAPI instance.  Because
+our test-suite imports the same helper the automated checks exercise the exact
+request that the script emits.
+
+Quick start (uses the fixture headers and requests a ZIP bundle):
+```bash
+python scripts/run_generator.py
+```
+
+To target different headers or a different backend:
+```bash
+python scripts/run_generator.py \
+  --root MyStruct \
+  --old-header path/to/old.h \
+  --new-header path/to/new.h \
+  --backend offline
+```
+
+If you prefer manual requests you can still use `curl`:
 ```bash
 curl -X POST http://localhost:8000/generate \
   -H 'Content-Type: application/json' \
