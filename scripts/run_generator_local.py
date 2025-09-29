@@ -3,9 +3,14 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 from pathlib import Path
 
-from scripts.run_generator import main
+if __package__ is None or __package__ == "":
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+    from scripts.run_generator import main
+else:  # pragma: no cover - import guard is runtime dependent
+    from .run_generator import main
 
 DEFAULT_MODEL_PATH = Path.home() / ".llama" / "checkpoints" / "Llama-4-Scout-17B-16E-Instruct"
 
