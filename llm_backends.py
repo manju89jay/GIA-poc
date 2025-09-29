@@ -109,6 +109,10 @@ class LocalLlamaLLM(LLMClient):
         except Exception as exc:  # pragma: no cover - runtime error surfaced to caller
             raise LLMError(f"llama.cpp generation failed: {exc}") from exc
 
+        if hasattr(response, "model_dump"):
+            response = response.model_dump()
+        elif hasattr(response, "dict"):
+            response = response.dict()
         if not isinstance(response, dict):
             raise LLMError("unexpected response from llama.cpp")
         choices = response.get("choices") or []
