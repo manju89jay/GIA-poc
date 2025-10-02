@@ -1,0 +1,88 @@
+version: 1
+agent:
+  provider: openai
+  model: gpt-4o-mini
+  temperature: 0.2
+  max_output_tokens: 6000
+scope:
+  include:
+    - "app.py"
+    - "models.py"
+    - "parser_validator.py"
+    - "llm_backends.py"
+    - "scripts/**"
+    - "tests/**"
+  exclude:
+    - "dist/**"
+    - "build/**"
+    - "vendor/**"
+    - "**/*.lock"
+    - "tests/fixtures/**"
+    - "*.min.js"
+review_focus:
+  security:
+    severity: critical
+    checks:
+      - "Identify insecure prompt handling, injection vectors, or unsanitized subprocess calls."
+      - "Flag secrets or credentials committed to the repo."
+  performance:
+    severity: high
+    checks:
+      - "Spot inefficient parsing loops or redundant LLM invocations."
+      - "Recommend caching and streaming patterns for large responses."
+  readability:
+    severity: medium
+    checks:
+      - "Encourage descriptive naming, docstrings, and modular functions."
+  style:
+    severity: low
+    checks:
+      - "Align with Black, Ruff, and PEP8 formatting conventions."
+  best_practices:
+    severity: medium
+    checks:
+      - "Promote defensive error handling, typing, and logging for observability."
+commenting:
+  inline_comments: true
+  summary_comment: true
+  max_comments: 25
+  group_similar: true
+  suggested_fixes: true
+merge_policy:
+  mode: allow_if_no_issues
+  block_on:
+    - security:critical
+    - performance:high
+labels:
+  enable:
+    - ai-review
+  bypass:
+    - no-ai-review
+stakeholders:
+  summary_cc:
+    default:
+      - "@my-org/python-maintainers"
+  paths:
+    "app.py":
+      - "@my-org/app-owners"
+    "models.py":
+      - "@my-org/data-science"
+cost_controls:
+  max_tokens: 6000
+  max_files: 120
+  max_lines: 2500
+fail_safe:
+  require_secrets: true
+  missing_secret_behavior: warn
+  retry_limit: 1
+logging:
+  metrics: true
+  redact_code_snippets: false
+  output_path: .github/ai-review/logs
+auto_fix:
+  mode: suggestions_only
+  open_follow_up_pr: false
+testing_guidance:
+  commands:
+    - "pytest"
+    - "ruff check"

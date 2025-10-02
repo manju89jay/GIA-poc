@@ -1,0 +1,13 @@
+# Mapping between repository paths and CODEOWNERS to @-mention in AI review summaries.
+# Update this file alongside CODEOWNERS to keep notifications in sync.
+default:
+  - "@my-org/python-maintainers"
+paths:
+  "app.py":
+    - "@my-org/app-owners"
+  "models.py":
+    - "@my-org/data-science"
+  "llm_backends.py":
+    - "@my-org/platform-llm"
+  "tests/**":
+    - "@my-org/qa"

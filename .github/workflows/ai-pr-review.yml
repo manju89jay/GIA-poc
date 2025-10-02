@@ -1,0 +1,49 @@
+name: AI PR Review
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    name: Run AI code review
+    if: >-
+      !contains(github.event.pull_request.labels.*.name, 'no-ai-review')
+        && github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.AI_PR_REVIEW_API_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure AI review secret is present
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "::error::OPENAI_API_KEY secret is not configured. Add AI_PR_REVIEW_API_KEY in repository secrets."
+            exit 1
+          fi
+
+      - name: Run Qodo AI PR Agent
+        uses: qodo-ai/pr-agent@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          config: .github/ai-review/config.yml
+          repo-dir: ${{ github.workspace }}
+        env:
+          OPENAI_API_KEY: ${{ secrets.AI_PR_REVIEW_API_KEY }}
+          PR_REVIEWER_EXTRA_ARGS: "--owners-config .github/ai-review/owners.yml"
+
+      - name: Upload review logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-pr-review-logs
+          path: .github/ai-review/logs
+          if-no-files-found: ignore

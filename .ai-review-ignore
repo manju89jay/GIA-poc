@@ -1,0 +1,17 @@
+# Paths and files that the AI PR review agent should skip by default.
+# Adjust this list as the repository evolves.
+
+# Build artifacts and cached environments
+build/**
+dist/**
+.venv/**
+__pycache__/**
+
+# Vendored or generated assets
+vendor/**
+node_modules/**
+**/*.lock
+*.min.js
+
+# Test fixtures and large data files
+tests/fixtures/**
