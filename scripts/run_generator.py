@@ -11,7 +11,7 @@ import argparse
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Iterable
+from typing import Any, Callable, Dict, Iterable
 
 import requests
 
@@ -87,7 +87,9 @@ def _warn_missing_openai_key(backend: str) -> None:
         )
 
 
-def main(argv: Iterable[str] | None = None) -> int:
+def build_cli_parser(
+    *, default_backend: str = "openai", default_model: str | None = None
+) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Call the local GIA generator")
     parser.add_argument(
         "--url",
@@ -111,12 +113,12 @@ def main(argv: Iterable[str] | None = None) -> int:
     )
     parser.add_argument(
         "--backend",
-        default="openai",
-        help="LLM backend identifier (default: openai)",
+        default=default_backend,
+        help=f"LLM backend identifier (default: {default_backend})",
     )
     parser.add_argument(
         "--model",
-        default=None,
+        default=default_model,
         help="Optional model override passed to the backend",
     )
     parser.add_argument(
@@ -136,29 +138,59 @@ def main(argv: Iterable[str] | None = None) -> int:
         default=None,
         help="Optional file to write the raw JSON response to",
     )
+    return parser
 
+
+def main(
+    argv: Iterable[str] | None = None,
+    *,
+    default_backend: str = "openai",
+    default_model: str | None = None,
+    preflight: Callable[[argparse.Namespace], None] | None = None,
+) -> int:
+    parser = build_cli_parser(default_backend=default_backend, default_model=default_model)
     args = parser.parse_args(list(argv) if argv is not None else None)
+
+    if preflight is not None:
+        try:
+            preflight(args)
+        except SystemExit:
+            raise
+        except Exception as exc:
+            print(f"[error] {exc}")
+            return 1
 
     _warn_missing_openai_key(args.backend)
 
-    payload = build_payload(
-        root=args.root,
-        old_header_path=args.old_header,
-        new_header_path=args.new_header,
-        backend=args.backend,
-        return_zip=not args.no_zip,
-        model=args.model,
-        temperature=args.temperature,
-    )
-    data = call_generator(args.url, payload)
+    try:
+        payload = build_payload(
+            root=args.root,
+            old_header_path=args.old_header,
+            new_header_path=args.new_header,
+            backend=args.backend,
+            return_zip=not args.no_zip,
+            model=args.model,
+            temperature=args.temperature,
+        )
+    except Exception as exc:
+        print(f"[error] failed to build request payload: {exc}")
+        return 1
+
+    try:
+        data = call_generator(args.url, payload)
+    except Exception as exc:
+        print(f"[error] generator request failed: {exc}")
+        return 1
 
     if args.dump_json:
-        args.dump_json.write_text(json.dumps(data, indent=2))
-        print(f"Wrote response to {args.dump_json}")
+        try:
+            args.dump_json.write_text(json.dumps(data, indent=2))
+            print(f"Wrote response to {args.dump_json}")
+        except Exception as exc:
+            print(f"[warning] failed to write JSON response: {exc}")
 
     for line in format_response_summary(data):
         print(line)
-
     return 0
 
 

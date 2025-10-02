@@ -28,13 +28,18 @@ Generates versioned adapters for C structs by calling an LLM. Given two preproce
    ```
    The API listens on `http://localhost:8000`.
 4. **Call the generator**
-   With the server running you can execute the cross-platform helper script.
-   The defaults use the bundled fixtures so the first run works out of the box:
+   With the server running you can execute one of the helper scripts depending
+   on the backend you want to exercise. Both reuse the same code paths as the
+   automated tests so the behaviour is identical:
    ```bash
-   python scripts/run_generator.py
+   # OpenAI backend
+   python scripts/run_generator_openai.py
+
+   # Local llama.cpp backend (see below for setup details)
+   python scripts/run_generator_local.py
    ```
-   Use `python scripts/run_generator.py --help` to inspect additional
-   parameters (custom headers, backend overrides, dumping JSON, etc.).
+   Use `--help` to inspect additional parameters (custom headers, temperature
+   overrides, dumping JSON, etc.).
 
 ### Docker
 ```bash
@@ -65,16 +70,15 @@ request that the script emits.
 
 Quick start (uses the fixture headers and requests a ZIP bundle):
 ```bash
-python scripts/run_generator.py
+python scripts/run_generator_openai.py
 ```
 
 To target different headers or a different backend:
 ```bash
-python scripts/run_generator.py \
+python scripts/run_generator_openai.py \
   --root MyStruct \
   --old-header path/to/old.h \
-  --new-header path/to/new.h \
-  --backend offline
+  --new-header path/to/new.h
 ```
 
 If you prefer manual requests you can still use `curl`:
@@ -87,6 +91,11 @@ curl -X POST http://localhost:8000/generate \
 ## Backend config
 * **OpenAI** (default) — requires `OPENAI_API_KEY` env var.
 * **Offline** — set `backend` to `offline` and provide `OFFLINE_LLM_ENDPOINT` env var.
+* **Local llama.cpp** — install `llama-cpp-python`, download a GGUF checkpoint and
+  point `LLAMA_MODEL_PATH` (or `--model`) at it. The convenience script
+  `scripts/run_generator_local.py` defaults to
+  `~/.llama/checkpoints/Llama-4-Scout-17B-16E-Instruct` and verifies the file
+  exists before issuing the request.
 
 ## Prompt contract
 System and user prompts are defined in `prompt_text.py`. The LLM must return exactly four files or a single C comment block on error.
