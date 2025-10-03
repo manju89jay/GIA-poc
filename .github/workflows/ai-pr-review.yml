@@ -32,7 +32,7 @@ jobs:
           fi
 
       - name: Run Qodo AI PR Agent
-        uses: qodo-ai/pr-agent@v1
+        uses: qodo-ai/pr-agent@v0.6.5
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           config: .github/ai-review/config.yml
