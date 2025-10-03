@@ -111,3 +111,33 @@ System and user prompts are defined in `prompt_text.py`. The LLM must return exa
 ```bash
 pytest -q
 ```
+
+## AI Pull Request Review Workflow
+
+This repository includes an automated AI reviewer powered by [Qodo AI PR Agent](https://github.com/qodo-ai/pr-agent). Every pull request that is opened, reopened, or updated runs the workflow defined in `.github/workflows/ai-pr-review.yml`. The agent posts inline comments and a summary review that focus on security, performance, readability, style, and best practices for the Python codebase.
+
+### Setup checklist
+1. **Create secrets**
+   * `AI_PR_REVIEW_API_KEY` – API key for the configured LLM provider (e.g., OpenAI).
+   * Optionally rotate or scope a dedicated `GITHUB_TOKEN` via GitHub app if the default token lacks permissions.
+2. **Adjust reviewers and labels**
+   * Update `.github/ai-review/owners.yml` to mirror your `CODEOWNERS` file so the right people are @mentioned in summaries.
+   * Apply the `no-ai-review` label to bypass automated comments on sensitive or experimental branches.
+3. **Tune rules**
+   * Customize `.github/ai-review/config.yml` to refine severity thresholds, comment tone, and included paths.
+   * Add ignored paths to `.ai-review-ignore` for generated artifacts or vendored dependencies.
+
+### Running locally
+Use the helper script to reproduce the review locally before pushing:
+```bash
+export OPENAI_API_KEY=sk-your-secret
+export GITHUB_TOKEN=ghp_yourfinegrainedtoken
+./scripts/run_ai_pr_review.sh <pr-number> --dry-run
+```
+The script runs the same Docker image as CI, ensuring consistent behaviour and cost estimates.
+
+### Troubleshooting
+* **Missing secret** – The workflow fails early with an actionable error if `AI_PR_REVIEW_API_KEY` is absent.
+* **Rate limits** – Reduce `cost_controls.max_tokens` or `max_files` in `.github/ai-review/config.yml`, or re-run with the `--dry-run` flag locally to inspect usage.
+* **No comments posted** – Confirm the PR touches files that match the include globs and that the event is not labelled `no-ai-review` or marked as draft.
+* **Model-specific errors** – Check `.github/ai-review/logs` from the uploaded workflow artifact for the provider response and retry after adjusting prompts.
